@@ -1,0 +1,19 @@
+/**
+ * Copyright 2018 LinkedIn Corporation. All rights reserved. Licensed under the BSD-2 Clause license.
+ * See LICENSE in the project root for license information.
+ */
+apply plugin: 'scala'
+
+dependencies {
+  // This is Scala's option parsing library
+  compile("com.github.scopt:scopt$scalaSuffix:3.5.0")
+  compile("com.databricks:spark-avro$scalaSuffix:3.2.0")
+  compile("org.apache.spark:spark-mllib$scalaSuffix:2.1.0")
+
+  testCompile(project(":test-utils$scalaSuffix"))
+  testCompile("org.mockito:mockito-core:1.+")
+
+  testRuntime("org.scalanlp:breeze$scalaSuffix:0.11.2")
+  testRuntime("org.scalanlp:breeze-macros$scalaSuffix:0.11.2")
+}
+

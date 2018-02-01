@@ -1,0 +1,124 @@
+/**
+ * Copyright 2018 LinkedIn Corporation. All rights reserved. Licensed under the BSD-2 Clause license.
+ * See LICENSE in the project root for license information.
+ */
+// TODO: codecoverage plugin
+// TODO: checkstyle plugin
+
+buildscript {
+  if (!project.hasProperty('overrideBuildEnvironment')) {
+    repositories {
+      jcenter()
+      maven {
+        // For avro compiler plugin gradle-avro-plugin
+        url 'https://plugins.gradle.org/m2/'
+      }
+    }
+    dependencies {
+      // license-gradle plugin: https://github.com/hierynomus/license-gradle-plugin
+      classpath 'nl.javadude.gradle.plugins:license-gradle-plugin:0.11.0'
+    }
+  }
+}
+
+// For LinkedIn internal builds, apply the LinkedIn-specific build file
+if (project.hasProperty('overrideBuildEnvironment')) {
+  apply from: project.overrideBuildEnvironment
+} else {
+  apply from: "defaultEnvironment.gradle"
+}
+
+allprojects {
+  apply plugin: 'eclipse'
+  apply plugin: 'idea'
+  apply plugin: 'license'
+}
+
+// The gradle variables defined here are visible in sub-projects
+ext {
+  sparkVersion = '2.1.0'
+}
+
+subprojects {
+  // Put the build dir into the rootProject
+  buildDir = "../build/$name"
+
+  plugins.withType(JavaPlugin) {
+    tasks.withType(Test) {
+      useTestNG()
+
+      // Exclude tests (ex. gradle test -Pexclude=SomeTestClass)
+      def excludedTests = project.properties['exclude']
+      if (excludedTests) {
+        excludedTests.replaceAll('\\s', '').split('[,]').each {
+          exclude "**/${it}.class"
+        }
+      }
+
+      options {
+        parallel = 'methods'
+        threadCount = 4
+        listeners << 'com.linkedin.nn.test.FailOnSkipListener'
+      }
+
+      afterSuite { desc, result ->
+        if (!desc.parent) {
+          println ":${project.name} -- Executed ${result.testCount} tests: ${result.successfulTestCount} succeeded, ${result.failedTestCount} failed, ${result.skippedTestCount} skipped"
+        }
+      }
+
+      // Forward standard out from child JVMs to the console
+      testLogging {
+        showStackTraces = true
+        showStandardStreams = true
+        showExceptions = true
+        showCauses = true
+        displayGranularity = maxGranularity
+        exceptionFormat = 'full'
+      }
+
+      outputs.upToDateWhen { false }
+
+      systemProperty "log4j.configuration", "file:${project.rootDir}/log4j.properties"
+
+      minHeapSize = "2G"
+      maxHeapSize = "8G"
+    }
+
+    dependencies {
+      testCompile 'org.testng:testng:6.11'
+    }
+
+    sourceCompatibility = 1.8
+  }
+
+  tasks.withType(ScalaCompile) {
+    scalaCompileOptions.additionalParameters = ["-feature", "-deprecation", "-verbose", "-optimize", "-unchecked", "-Yinline-warnings", "-g:vars"]
+
+    configure(scalaCompileOptions.forkOptions) {
+      memoryMaximumSize = '1g'
+    }
+    configurations.zinc.transitive = true
+  }
+
+  idea {
+    module {
+      testSourceDirs += file('src/integTest/scala')
+      testSourceDirs += file('src/test/scala')
+    }
+  }
+
+  license {
+    header rootProject.file('buildSrc/src/main/resources/code-quality/license_header')
+    strictCheck = true
+  }
+
+  // This task allows to get the dependencies from all the sub-project from the main photon-ml directory
+  // (otherwise, you have to change to each sub-project directory to get its dependencies)
+  task allDeps(type: DependencyReportTask) {}
+}
+
+// Task to generate the Gradle wrapper scripts
+task wrapper(type: Wrapper) {
+  gradleVersion = '4.0'
+}

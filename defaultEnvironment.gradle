@@ -1,0 +1,18 @@
+/**
+ * Copyright 2018 LinkedIn Corporation. All rights reserved. Licensed under the BSD-2 Clause license.
+ * See LICENSE in the project root for license information.
+ */
+project.ext.avroMapReduceModifier = ''
+
+subprojects {
+  // Specify Jar versions here instead of within gradle.properties
+  // This will provide overriding ability for internal builds
+  tasks.withType(Jar) {
+    version '1.0.0'
+  }
+
+  repositories {
+    jcenter()
+    mavenCentral()
+  }
+}

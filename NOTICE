@@ -1,0 +1,19 @@
+Scalable Approximate Nearest Neighbor Search (ScANNS)
+
+Copyright 2018 LinkedIn Corporation. All rights reserved.
+
+Licensed under the BSD 2-Clause License (the "License").  See License in the project root for license information.
+
+This product includes software developed at The Apache Software Foundation (http://www.apache.org/).
+
+========================================================================
+For Apache Spark and its subcomponents:
+========================================================================
+This project includes components from the Apache Spark project, generally licensed under Apache License 2.0.  However,
+the Apache Spark project contains subcomponents with separate copyright notices and license terms.  Your use of these
+subcomponents are subject to the the terms and conditions of the licenses as set forth in the Apache Spark NOTICE
+Attributions (https://github.com/apache/spark/blob/branch-2.1/NOTICE).
+
+The data file at scanns/src/test/resources/nn/example.tsv was borrowed from
+https://github.com/soundcloud/cosine-lsh-join-spark/blob/master/data/example.tsv
+

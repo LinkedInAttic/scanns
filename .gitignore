@@ -1,0 +1,12 @@
+**/*.iml
+**/*.ipr
+**/*.iws
+.DS_Store
+**/.gradle
+.idea
+.project
+.settings
+/build
+/buildSrc/build
+out
+spark-warehouse
