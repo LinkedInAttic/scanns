@@ -54,11 +54,11 @@ abstract class LSHNearestNeighborSearchModel[T <: LSHNearestNeighborSearchModel[
     */
   private[model] class NearestNeighborIterator(bucketsIt: Iterator[Array[mutable.ArrayBuffer[ItemId]]],
                                 itemVectors: mutable.Map[ItemId, Vector],
-                                numNearestNeighbors: Int) extends Iterator[(ItemId, Iterator[ItemIdDistancePair])]
+                                numNearestNeighbors: Int) extends Iterator[(ItemId, IndexedSeq[ItemIdDistancePair])]
     with Serializable {
 
     // this will be the next element that the iterator returns on a call to next()
-    private var nextResult: Option[(ItemId, Iterator[ItemIdDistancePair])] = None
+    private var nextResult: Option[(ItemId, IndexedSeq[ItemIdDistancePair])] = None
 
     // this is the current tuple in the bucketsIt iterator that is being scanned
     private var currentTuple = if (bucketsIt.hasNext) Some(bucketsIt.next) else None
@@ -77,7 +77,7 @@ abstract class LSHNearestNeighborSearchModel[T <: LSHNearestNeighborSearchModel[
                 .map(c => (c, distance.compute(itemVectors(c), itemVectors(x(0)(currentIndex)))))
                 .foreach(queue.enqueue(_))
               if (queue.nonEmpty()) {
-                nextResult = Some((x(0)(currentIndex), queue.iterator()))
+                nextResult = Some((x(0)(currentIndex), queue.iterator().toIndexedSeq))
                 done = true
               }
               currentIndex += 1
@@ -98,7 +98,7 @@ abstract class LSHNearestNeighborSearchModel[T <: LSHNearestNeighborSearchModel[
 
     override def hasNext: Boolean = nextResult.isDefined
 
-    override def next(): (ItemId, Iterator[ItemIdDistancePair]) = {
+    override def next(): (ItemId, IndexedSeq[ItemIdDistancePair]) = {
       if (hasNext) {
         val ret = nextResult.get
         populateNext()
