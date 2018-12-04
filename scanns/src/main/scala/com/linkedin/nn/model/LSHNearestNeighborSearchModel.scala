@@ -261,6 +261,9 @@ abstract class LSHNearestNeighborSearchModel[T <: LSHNearestNeighborSearchModel[
     } else {
       explodeData(transform(candidatePool)).partitionBy(hashPartitioner)
     }
+    val zero: TopNQueue = new TopNQueue(k)
+    def seqOp(U: TopNQueue, V: IndexedSeq[ItemIdDistancePair]): TopNQueue = {U.enqueue(V:_*); U}
+    def combOp(X: TopNQueue, Y: TopNQueue): TopNQueue = {X.enqueue(Y.iterator().toSeq:_*); X}
     srcItemsExploded.zipPartitions(candidatePoolExploded) {
         case (srcIt, candidateIt) => {
           val itemVectors = mutable.Map[ItemId, Vector]()
@@ -283,15 +286,15 @@ abstract class LSHNearestNeighborSearchModel[T <: LSHNearestNeighborSearchModel[
           // logStats(TaskContext.getPartitionId(), itemVectors, hashBuckets)
           new NearestNeighborIterator(hashBuckets.valuesIterator, itemVectors, k)
         }
-      }
-      .groupByKey()
-      .mapValues { candidateIter =>
-        val topN = new TopNQueue(k)
-        candidateIter.flatten.foreach(topN.enqueue(_))
-        topN.iterator()
-      }
-      .flatMap{ x => x._2.map(z => (x._1, z._1, z._2)) }
-      .repartition($(numOutputPartitions))
+      }.aggregateByKey(zero, $(numOutputPartitions))(seqOp, combOp).flatMap{ x => x._2.iterator().map(z => (x._1, z._1, z._2)) }
+      //.groupByKey()
+      //.mapValues { candidateIter =>
+      //  val topN = new TopNQueue(k)
+      //  candidateIter.flatten.foreach(topN.enqueue(_))
+      //  topN.iterator()
+      //}
+      //.flatMap{ x => x._2.map(z => (x._1, z._1, z._2)) }
+      //.repartition($(numOutputPartitions))
   }
 
   /**
