@@ -8,7 +8,7 @@ subprojects {
   // Specify Jar versions here instead of within gradle.properties
   // This will provide overriding ability for internal builds
   tasks.withType(Jar) {
-    version '1.0.0'
+    version '1.0.1'
   }
 
   repositories {

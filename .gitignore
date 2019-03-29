@@ -10,3 +10,5 @@
 /buildSrc/build
 out
 spark-warehouse
+/metastore_db
+derby.log
